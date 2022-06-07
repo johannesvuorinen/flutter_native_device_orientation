@@ -11,9 +11,7 @@ import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
-import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
-import io.flutter.plugin.common.PluginRegistry.Registrar;
 
 /** NativeDeviceOrientationPlugin */
 public class NativeDeviceOrientationPlugin implements FlutterPlugin {
@@ -24,29 +22,13 @@ public class NativeDeviceOrientationPlugin implements FlutterPlugin {
   private MethodChannel channel;
   private EventChannel eventChannel;
   private OrientationReader reader;
+  private SensorOrientationReader sensorReader;
 
-  private MethodCallHandler methodCallHandler = new MethodCallHandler();
-  private StreamHandler streamHandler = new StreamHandler();
+  private final MethodCallHandler methodCallHandler = new MethodCallHandler();
+  private final StreamHandler streamHandler = new StreamHandler();
 
   private IOrientationListener listener;
   private Context context;
-
-  /**
-   * Plugin Registration
-   * @param registrar flutter registrar
-   */
-  public static void registerWith(Registrar registrar) {
-    NativeDeviceOrientationPlugin instance = new NativeDeviceOrientationPlugin();
-    instance.channel = new MethodChannel(registrar.messenger(), METHOD_CHANEL);
-    instance.channel.setMethodCallHandler(instance.methodCallHandler);
-
-    instance.eventChannel = new EventChannel(registrar.messenger(), EVENT_CHANNEL);
-    instance.eventChannel.setStreamHandler(instance.streamHandler);
-
-    instance.context = registrar.context();
-    instance.reader = new OrientationReader(instance.context);
-  }
-
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
@@ -58,6 +40,7 @@ public class NativeDeviceOrientationPlugin implements FlutterPlugin {
 
     context = flutterPluginBinding.getApplicationContext();
     reader = new OrientationReader(context);
+    sensorReader = new SensorOrientationReader(context);
   }
 
 
@@ -78,9 +61,9 @@ public class NativeDeviceOrientationPlugin implements FlutterPlugin {
 
             // we can't immediately retrieve a orientation from the sensor. We have to start listening
             // and return the first orientation retrieved.
-            reader.getSensorOrientation(new IOrientationListener.OrientationCallback(){
+            sensorReader.getOrientation(new IOrientationListener.OrientationCallback(){
               @Override
-              public void receive(OrientationReader.Orientation orientation) {
+              public void receive(NativeOrientation orientation) {
                 result.success(orientation.name());
               }
             });
@@ -116,7 +99,8 @@ public class NativeDeviceOrientationPlugin implements FlutterPlugin {
       boolean useSensor = false;
       // used hashMap to send parameters to this method. This makes it easier in the future to add new parameters if needed.
       if(parameters instanceof Map){
-        Map params = (Map) parameters;
+        //noinspection unchecked
+        Map<String, Object> params = (Map<String,Object>) parameters;
 
         if(params.containsKey("useSensor")){
           Boolean useSensorNullable = (Boolean) params.get("useSensor");
@@ -127,14 +111,14 @@ public class NativeDeviceOrientationPlugin implements FlutterPlugin {
       // initialize the callback. It is the same for both listeners.
       IOrientationListener.OrientationCallback callback = new IOrientationListener.OrientationCallback() {
         @Override
-        public void receive(OrientationReader.Orientation orientation) {
+        public void receive(NativeOrientation orientation) {
           eventSink.success(orientation.name());
         }
       };
 
       if(useSensor){
         Log.i("NDOP", "listening using sensor listener");
-        listener = new SensorOrientationListener(reader, context, callback);
+        listener = new SensorOrientationListener(context, callback);
       }else{
         Log.i("NDOP", "listening using window listener");
         listener = new OrientationListener(reader, context, callback);

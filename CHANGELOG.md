@@ -1,3 +1,28 @@
+## [1.1.4] - June 6, 2022
+
+* Fix bug stopping android from compiling
+
+## [1.1.3] - June 5, 2202
+
+* Fix sensos getOrientation on android (for real this time)
+* Make iOS keep last orientation if device is flat
+
+## [1.1.2] - May 17, 2022
+
+* Fix direct sensor getOrientation on android
+* Listen to status bar change on iOS rather than device change (fix for older devices)
+
+## [1.1.1] - May 17, 2022
+
+* Rename unknownSubstitute to defaultOrientation.
+
+## [1.1.0] - May 17, 2022
+
+* Support Flutter 3.0 (should still support 2.x as well)
+* Adds additional, more explicit way to use plugin
+* Allows setting default if "unknown" is returned from native
+  side, previously always defaulted to PortraitUp.
+
 ## [1.0.0] - March 9, 2021
 
 * Support null-safety.
