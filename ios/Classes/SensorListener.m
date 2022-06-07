@@ -12,34 +12,41 @@
 }
 
 - (void)startOrientationListener:(void (^)(NSString* orientation)) orientationRetrieved {
-	[self initMotionManager];
-	if([motionManager isDeviceMotionAvailable] == YES){
-		motionManager.deviceMotionUpdateInterval = 0.1;
-		
-		[motionManager startDeviceMotionUpdatesToQueue:[NSOperationQueue mainQueue] withHandler:^(CMDeviceMotion *data, NSError *error) {
-			NSString *orientation;
-			//printf("Gravity: %f    %f\n", data.gravity.x, data.gravity.y);
-			if(((self->lastOrientation == PORTRAIT_DOWN || self->lastOrientation == PORTRAIT_UP) && fabs(data.gravity.x)>fabs(data.gravity.y)) ||
-			   ((self->lastOrientation == LANDSCAPE_RIGHT || self->lastOrientation == LANDSCAPE_LEFT) && fabs(data.gravity.x)+0.5f>fabs(data.gravity.y))){
-				// we are in landscape-mode
-				//printf("LANDSCAPE\n");
-				if(data.gravity.x>=0){
-					orientation = LANDSCAPE_RIGHT;
-				}
-				else{
-					orientation = LANDSCAPE_LEFT;
-				}
-			}
-			else{
-				//printf("PORTRAIT\n");
-				// we are in portrait mode
-				if(data.gravity.y>=0){
-					orientation = PORTRAIT_DOWN;
-				}
-				else{
-					orientation = PORTRAIT_UP;
-				}
-			}
+    [self initMotionManager];
+    if([motionManager isDeviceMotionAvailable] == YES){
+        motionManager.deviceMotionUpdateInterval = 0.1;
+        
+        [motionManager startDeviceMotionUpdatesToQueue:[NSOperationQueue mainQueue] withHandler:^(CMDeviceMotion *data, NSError *error) {
+            NSString *orientation;
+
+            float agx = fabs(data.gravity.x), agy = fabs(data.gravity.y);
+          
+            if (agx < 0.1 && agy < 0.1) {
+                // ignore when both values are small as this means
+                // the device is flat.
+                return;
+            }
+          
+          	if(((self->lastOrientation == PORTRAIT_DOWN || self->lastOrientation == PORTRAIT_UP) && agx > agy) ||
+			   ((self->lastOrientation == LANDSCAPE_RIGHT || self->lastOrientation == LANDSCAPE_LEFT) && agx + 0.5f > agy)){
+            if(agx > agy){
+                // we are in landscape-mode
+                if(data.gravity.x >= 0){
+                    orientation = LANDSCAPE_RIGHT;
+                }
+                else{
+                    orientation = LANDSCAPE_LEFT;
+                }
+            }
+            else{
+                // we are in portrait mode
+                if(data.gravity.y >= 0){
+                    orientation = PORTRAIT_DOWN;
+                }
+                else{
+                    orientation = PORTRAIT_UP;
+                }
+            }
 
 			if (self->lastOrientation == nil || ![orientation isEqualToString:(self->lastOrientation)]) {
 				self->lastOrientation = orientation;
