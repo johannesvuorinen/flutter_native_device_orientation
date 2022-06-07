@@ -27,32 +27,34 @@
                 return;
             }
           
-          	if(((self->lastOrientation == PORTRAIT_DOWN || self->lastOrientation == PORTRAIT_UP) && agx > agy) ||
-			   ((self->lastOrientation == LANDSCAPE_RIGHT || self->lastOrientation == LANDSCAPE_LEFT) && agx + 0.5f > agy)){
-            if(agx > agy){
-                // we are in landscape-mode
-                if(data.gravity.x >= 0){
-                    orientation = LANDSCAPE_RIGHT;
-                }
-                else{
-                    orientation = LANDSCAPE_LEFT;
-                }
-            }
-            else{
-                // we are in portrait mode
-                if(data.gravity.y >= 0){
-                    orientation = PORTRAIT_DOWN;
-                }
-                else{
-                    orientation = PORTRAIT_UP;
-                }
-            }
-
-			if (self->lastOrientation == nil || ![orientation isEqualToString:(self->lastOrientation)]) {
-				self->lastOrientation = orientation;
-				orientationRetrieved(orientation);
+            if(((self->lastOrientation == PORTRAIT_DOWN || self->lastOrientation == PORTRAIT_UP) && agx > agy) ||
+			   ((self->lastOrientation == LANDSCAPE_RIGHT || self->lastOrientation == LANDSCAPE_LEFT) && agx + 0.5f > agy))
+	    {
+		    if(agx > agy){
+			// we are in landscape-mode
+			if(data.gravity.x >= 0){
+			    orientation = LANDSCAPE_RIGHT;
 			}
-		}];
+			else{
+			    orientation = LANDSCAPE_LEFT;
+			}
+		    }
+		    else{
+			// we are in portrait mode
+			if(data.gravity.y >= 0){
+			    orientation = PORTRAIT_DOWN;
+			}
+			else{
+			    orientation = PORTRAIT_UP;
+			}
+		    }
+
+		if (self->lastOrientation == nil || ![orientation isEqualToString:(self->lastOrientation)]) {
+			self->lastOrientation = orientation;
+			orientationRetrieved(orientation);
+		}
+	    }
+	}];
 	}
 }
 
