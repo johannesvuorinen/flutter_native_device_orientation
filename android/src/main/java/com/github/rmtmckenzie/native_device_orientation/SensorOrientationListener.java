@@ -73,22 +73,22 @@ public class SensorOrientationListener implements IOrientationListener {
                 SensorManager.getOrientation(rMat, orientation);
                 //Log.d("", "Orientation " + orientation[0] + "  " + orientation[1] + "  " + orientation[2]);
 
-                OrientationReader.Orientation newOrientation = getDeviceDefaultOrientation();
-                if (((lastOrientation == OrientationReader.Orientation.PortraitDown || lastOrientation == OrientationReader.Orientation.PortraitUp) && Math.abs(orientation[2]) > Math.abs(orientation[1]) + 0.5) ||
-                        ((lastOrientation == OrientationReader.Orientation.LandscapeLeft || lastOrientation == OrientationReader.Orientation.LandscapeRight) && Math.abs(orientation[2]) + 0.5 > Math.abs(orientation[1]))) {
+                NativeOrientation newOrientation = getDeviceDefaultOrientation();
+                if (((lastOrientation == NativeOrientation.PortraitDown || lastOrientation == NativeOrientation.PortraitUp) && Math.abs(orientation[2]) > Math.abs(orientation[1]) + 0.5) ||
+                        ((lastOrientation == NativeOrientation.LandscapeLeft || lastOrientation == NativeOrientation.LandscapeRight) && Math.abs(orientation[2]) + 0.5 > Math.abs(orientation[1]))) {
                     //Log.d("", "LANDSCAPE!");
                     if(orientation[0]>=0){
-                        newOrientation = OrientationReader.Orientation.LandscapeRight;
+                        newOrientation = NativeOrientation.LandscapeRight;
                     } else {
-                        newOrientation = OrientationReader.Orientation.LandscapeLeft;
+                        newOrientation = NativeOrientation.LandscapeLeft;
                     }
                 } else {
                     if(orientation[1]>=0){
                         //Log.d("", "Portrait Down!");
-                        newOrientation = OrientationReader.Orientation.PortraitDown;
+                        newOrientation = NativeOrientationn.PortraitDown;
                     } else {
                         //Log.d("", "Portrait Up!");
-                        newOrientation = OrientationReader.Orientation.PortraitUp;
+                        newOrientation = NativeOrientation.PortraitUp;
                     }
                 }
 
