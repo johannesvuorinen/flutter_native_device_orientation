@@ -3,7 +3,11 @@ package com.github.rmtmckenzie.native_device_orientation;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.hardware.SensorManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
 import android.view.OrientationEventListener;
+import android.hardware.SensorEventListener;
+import android.util.Log;
 import android.view.Surface;
 import android.view.WindowManager;
 
@@ -25,13 +29,27 @@ public class SensorOrientationListener implements IOrientationListener {
     private final OrientationCallback callback;
     private final Rate rate;
 
-    private OrientationEventListener orientationEventListener;
+    private SensorEventListener orientationSensorEventListener;
+    private Sensor orientationSensor;
+    private SensorManager sensorManager;
     private NativeOrientation lastOrientation = null;
+    private float[] rMat;
+    private float[] orientation;
 
     public SensorOrientationListener(Context context, OrientationCallback callback, Rate rate) {
         this.context = context;
         this.callback = callback;
         this.rate = rate;
+
+        orientation = new float[3];
+        rMat = new float[9];
+
+        sensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+        orientationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        if (orientationSensor == null)
+        {
+            orientationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
+        }
     }
 
     public SensorOrientationListener(Context context, OrientationCallback callback) {
@@ -41,15 +59,38 @@ public class SensorOrientationListener implements IOrientationListener {
 
     @Override
     public void startOrientationListener() {
-        if (orientationEventListener != null) {
+        if (orientationSensorEventListener != null) {
             callback.receive(lastOrientation);
             return;
         }
 
-        orientationEventListener = new OrientationEventListener(context, rate.nativeValue) {
-            @Override
-            public void onOrientationChanged(int angle) {
-                NativeOrientation newOrientation = calculateSensorOrientation(angle);
+        orientationSensorEventListener = new SensorEventListener() {
+            public void onAccuracyChanged(Sensor sensor, int accuracy) {
+            }
+
+            public void onSensorChanged(SensorEvent event) {
+                SensorManager.getRotationMatrixFromVector(rMat, event.values);
+                SensorManager.getOrientation(rMat, orientation);
+                //Log.d("", "Orientation " + orientation[0] + "  " + orientation[1] + "  " + orientation[2]);
+
+                OrientationReader.Orientation newOrientation = getDeviceDefaultOrientation();
+                if (((lastOrientation == OrientationReader.Orientation.PortraitDown || lastOrientation == OrientationReader.Orientation.PortraitUp) && Math.abs(orientation[2]) > Math.abs(orientation[1]) + 0.5) ||
+                        ((lastOrientation == OrientationReader.Orientation.LandscapeLeft || lastOrientation == OrientationReader.Orientation.LandscapeRight) && Math.abs(orientation[2]) + 0.5 > Math.abs(orientation[1]))) {
+                    //Log.d("", "LANDSCAPE!");
+                    if(orientation[0]>=0){
+                        newOrientation = OrientationReader.Orientation.LandscapeRight;
+                    } else {
+                        newOrientation = OrientationReader.Orientation.LandscapeLeft;
+                    }
+                } else {
+                    if(orientation[1]>=0){
+                        //Log.d("", "Portrait Down!");
+                        newOrientation = OrientationReader.Orientation.PortraitDown;
+                    } else {
+                        //Log.d("", "Portrait Up!");
+                        newOrientation = OrientationReader.Orientation.PortraitUp;
+                    }
+                }
 
                 if (!newOrientation.equals(lastOrientation)) {
                     lastOrientation = newOrientation;
@@ -57,59 +98,17 @@ public class SensorOrientationListener implements IOrientationListener {
                 }
             }
         };
-        if (orientationEventListener.canDetectOrientation()) {
-            orientationEventListener.enable();
-        }
+
+        sensorManager.registerListener(orientationSensorEventListener, orientationSensor, SensorManager.SENSOR_DELAY_GAME);
     }
 
     @Override
     public void stopOrientationListener() {
-        if (orientationEventListener == null) return;
-        orientationEventListener.disable();
-        orientationEventListener = null;
-    }
-
-    public NativeOrientation calculateSensorOrientation(int angle) {
-        if (angle == OrientationEventListener.ORIENTATION_UNKNOWN) {
-            return NativeOrientation.Unknown;
+        if (sensorManager != null && orientationSensorEventListener != null)
+        {
+            sensorManager.unregisterListener(orientationSensorEventListener);
         }
-        NativeOrientation returnOrientation;
-
-        final int tolerance = 45;
-        angle += tolerance;
-
-        // orientation is 0 in the default orientation mode. This is portait-mode for phones
-        // and landscape for tablets. We have to compensate this by calculating the default orientation,
-        // and applying an offset.
-        int defaultDeviceOrientation = getDeviceDefaultOrientation();
-        if (defaultDeviceOrientation == Configuration.ORIENTATION_LANDSCAPE) {
-            // add offset to landscape
-            angle += 90;
-        }
-
-        angle = angle % 360;
-        int screenOrientation = angle / 90;
-
-        switch (screenOrientation) {
-            case 0:
-                returnOrientation = NativeOrientation.PortraitUp;
-                break;
-            case 1:
-                returnOrientation = NativeOrientation.LandscapeRight;
-                break;
-            case 2:
-                returnOrientation = NativeOrientation.PortraitDown;
-                break;
-            case 3:
-                returnOrientation = NativeOrientation.LandscapeLeft;
-                break;
-
-            default:
-                returnOrientation = NativeOrientation.Unknown;
-
-        }
-
-        return returnOrientation;
+        orientationSensorEventListener = null;
     }
 
     public int getDeviceDefaultOrientation() {
