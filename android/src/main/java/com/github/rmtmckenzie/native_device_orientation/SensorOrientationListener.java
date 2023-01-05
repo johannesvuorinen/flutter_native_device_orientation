@@ -73,7 +73,7 @@ public class SensorOrientationListener implements IOrientationListener {
                 SensorManager.getOrientation(rMat, orientation);
                 //Log.d("", "Orientation " + orientation[0] + "  " + orientation[1] + "  " + orientation[2]);
 
-                NativeOrientation newOrientation = getDeviceDefaultOrientation();
+                NativeOrientation newOrientation = (NativeOrientation)getDeviceDefaultOrientation();
                 if (((lastOrientation == NativeOrientation.PortraitDown || lastOrientation == NativeOrientation.PortraitUp) && Math.abs(orientation[2]) > Math.abs(orientation[1]) + 0.5) ||
                         ((lastOrientation == NativeOrientation.LandscapeLeft || lastOrientation == NativeOrientation.LandscapeRight) && Math.abs(orientation[2]) + 0.5 > Math.abs(orientation[1]))) {
                     //Log.d("", "LANDSCAPE!");
@@ -85,7 +85,7 @@ public class SensorOrientationListener implements IOrientationListener {
                 } else {
                     if(orientation[1]>=0){
                         //Log.d("", "Portrait Down!");
-                        newOrientation = NativeOrientationn.PortraitDown;
+                        newOrientation = NativeOrientation.PortraitDown;
                     } else {
                         //Log.d("", "Portrait Up!");
                         newOrientation = NativeOrientation.PortraitUp;
