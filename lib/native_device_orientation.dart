@@ -215,6 +215,9 @@ class NativeDeviceOrientationReaderState extends State<NativeDeviceOrientationRe
       case AppLifecycleState.detached:
         // unused on iOS on Android the app will be suspended.
         break;
+      default:
+        // ignoring AppLifecycleState.hidden as it is synthetic event on iOS/Androidq
+        break;
     }
   }
 

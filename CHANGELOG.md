@@ -1,3 +1,12 @@
+## [1.2.1] - Oct 16, 2023
+
+* Remove AppLifecycleState.hidden and use switch default instead
+
+## [1.2.0] - Oct 11, 2023
+
+* Add compatibility with AGP 8 (Android Gradle Plugin).
+* Stop using `fastest` sensor listener by default as requires additional permission
+
 ## [1.1.4] - June 6, 2022
 
 * Fix bug stopping android from compiling
